@@ -6,9 +6,9 @@ import random
 import time
 from langchain.chat_models import ChatOpenAI
 
-llm = ChatOpenAI(temperature=0.0, model_name='gpt-3.5-turbo', verbose=True)
 
-load_dotenv()
+
+# load_dotenv()
 
 openai_api_key = st.sidebar.text_input('OpenAI API Key')
 
@@ -26,7 +26,9 @@ if not openai_api_key.startswith('sk-'):
     st.warning('Please enter your OpenAI API key!', icon='⚠')
     # st.secrets["OPENAI_API_KEY"] = openai_api_key
     # Set OpenAI API key from Streamlit secrets
+else:
     openai.api_key = openai_api_key
+    st.session_state.llm = ChatOpenAI(temperature=0.0, model_name='gpt-3.5-turbo', verbose=True, openai_api_key=openai_api_key)
 
 # Set a default model
 if "openai_model" not in st.session_state:
@@ -49,7 +51,7 @@ if "messages" not in st.session_state:
 if (st.session_state.messages == []) & (len(st.session_state.init_question) == len(MAJOR_QUESTIONS)):
     message = st.chat_message("assistant")
     q1 = st.session_state.init_question.pop(0)
-    full_prompt = "You will be asked 5 questions. Please answer them as complete possible. \n" + q1
+    full_prompt = "You will be asked 5 questions. Please answer them as completely as possible. '\n' " + q1
     message.write(full_prompt)
     i = 0
     st.session_state.messages.append({"role": "assistant", "content": full_prompt})
@@ -85,12 +87,12 @@ if len(st.session_state.content) == len(MAJOR_QUESTIONS):
     message = st.chat_message("assistant")
     message.write("diagnostic in progress ......")
     dialog_str = "'\n''\n'".join(st.session_state.content)
-    prompt = f""" Assume you are a pscologist. 5 questiond and answers will be prsented to you. Provide your best 
-    educated gues on the patient diagnostics. You should consider DSM-5 in every step of process. After diagnostics, 
+    prompt = f""" Assume you are a psychologist. 5 questions and answers will be presented to you. Provide your best 
+    educated guess on the patient's diagnostics. You should consider DSM-5 in every step of the process. After diagnostics, 
     explain what made you make that diagnostic. Below is the Q&A:
     
     {dialog_str}
     """
-    response = llm.predict(prompt)
+    response = st.session_state.llm.predict(prompt)
     message = st.chat_message("assistant")
     message.write(response)
